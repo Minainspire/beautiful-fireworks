@@ -78,64 +78,100 @@ const mainStage = new Stage("main-canvas");
 const stages = [trailsStage, mainStage];
 
 //随机文字烟花内容
-// 动态文字烟花内容
-const customWords = [
-	"2025.3.27 我第一次见你，你穿着蓝色条纹衬衫，干净清爽",
-	"雨后的中原镇，晚风微凉，你的胸膛给我温暖",
-	"海边的烟花下，心跳漏半拍的亲吻",
-	"你曾说喜欢聪明的女孩，我也在努力成长",
-	"系统升级补丁提示"
-];
-let wordIndex = 0;
+const randomWords = ["手拉手"];
 const wordDotsMap = {};
-let initWordIndex = 0;
-
-// 逐个初始化文字点阵，避免阻塞主线程
-function initializeWordDotsProgressive() {
-	if (initWordIndex < customWords.length) {
-		const word = customWords[initWordIndex++];
-		try {
-			wordDotsMap[word] = MyMath.literalLattice(word, 3, "Gabriola,华文琥珀", "90px");
-		} catch (e) {
-			console.error("Failed to generate word dots for:", word, e);
-		}
-		// 继续初始化下一个，使用 requestIdleCallback 或 setTimeout
-		if (window.requestIdleCallback) {
-			requestIdleCallback(initializeWordDotsProgressive, { timeout: 500 });
-		} else {
-			setTimeout(initializeWordDotsProgressive, 50);
-		}
-	}
-}
-
-// 页面加载完成后开始初始化
-document.addEventListener("DOMContentLoaded", () => {
-	setTimeout(initializeWordDotsProgressive, 1000);
+randomWords.forEach((word) => {
+	wordDotsMap[word] = MyMath.literalLattice(word, 3, "Gabriola,华文琥珀", "90px");
 });
 
-// 控制每条文字只出现一次，依次出现
-function nextWord() {
-	if (wordIndex < customWords.length) {
-		return customWords[wordIndex++];
-	} else {
-		return null;
+// 生成"手拉手"图案的点阵
+function generateHoldingHandsPattern() {
+	const points = [];
+	
+	// 左边的人（简化的人形）
+	// 头部
+	for (let x = -40; x <= -30; x += 2) {
+		for (let y = -50; y <= -40; y += 2) {
+			if (Math.sqrt((x + 35) ** 2 + (y + 45) ** 2) <= 5) {
+				points.push({ x, y });
+			}
+		}
 	}
+	
+	// 身体
+	for (let x = -40; x <= -30; x += 2) {
+		for (let y = -40; y <= -10; y += 2) {
+			points.push({ x, y });
+		}
+	}
+	
+	// 左臂
+	for (let x = -50; x <= -30; x += 2) {
+		for (let y = -35; y <= -25; y += 2) {
+			if (Math.abs(y + 30) <= 5) points.push({ x, y });
+		}
+	}
+	
+	// 左腿
+	for (let x = -40; x <= -30; x += 2) {
+		for (let y = -10; y <= 20; y += 2) {
+			points.push({ x, y });
+		}
+	}
+	
+	// 右边的人
+	// 头部
+	for (let x = 30; x <= 40; x += 2) {
+		for (let y = -50; y <= -40; y += 2) {
+			if (Math.sqrt((x - 35) ** 2 + (y + 45) ** 2) <= 5) {
+				points.push({ x, y });
+			}
+		}
+	}
+	
+	// 身体
+	for (let x = 30; x <= 40; x += 2) {
+		for (let y = -40; y <= -10; y += 2) {
+			points.push({ x, y });
+		}
+	}
+	
+	// 右臂
+	for (let x = 30; x <= 50; x += 2) {
+		for (let y = -35; y <= -25; y += 2) {
+			if (Math.abs(y + 30) <= 5) points.push({ x, y });
+		}
+	}
+	
+	// 右腿
+	for (let x = 30; x <= 40; x += 2) {
+		for (let y = -10; y <= 20; y += 2) {
+			points.push({ x, y });
+		}
+	}
+	
+	// 中间连接的手（手拉手）
+	for (let x = -30; x <= 30; x += 2) {
+		for (let y = -32; y <= -28; y += 2) {
+			points.push({ x, y });
+		}
+	}
+	
+	return {
+		width: 100,
+		height: 80,
+		points: points
+	};
 }
 
-// 替换原有的 randomWord 函数
-function randomWord() {
-	// 降低频率：每隔较长时间才出现一次文字烟花
-	if (Math.random() < 0.2 && wordIndex < customWords.length) {
-		return nextWord();
-	}
-	return "";
-}
+// 添加到 wordDotsMap 中
+wordDotsMap["手拉手"] = generateHoldingHandsPattern();
 
 // 自定义背景
 document.addEventListener("DOMContentLoaded", function () {
 	// 获取目标div元素
 	var canvasContainer = document.querySelector(".canvas-container");
-	// 设置背景颜色
+	// 设置背景颜色为深蓝色
 	canvasContainer.style.background = "#0b1b3f";
 	canvasContainer.style.backgroundImage = "none";
 	canvasContainer.style.backgroundSize = "cover";
@@ -337,7 +373,7 @@ function configDidUpdate() {
 	isHighQuality = quality === QUALITY_HIGH;
 
 	if (skyLightingSelector() === SKY_LIGHT_NONE) {
-		appNodes.canvasContainer.style.backgroundColor = "#0b1b3f";
+		appNodes.canvasContainer.style.backgroundColor = "#000";
 	}
 
 	Spark.drawWidth = quality === QUALITY_HIGH ? 0.75 : 1;
@@ -1704,9 +1740,7 @@ function colorSky(speed) {
 	currentSkyColor.g += ((targetSkyColor.g - currentSkyColor.g) / colorChange) * speed;
 	currentSkyColor.b += ((targetSkyColor.b - currentSkyColor.b) / colorChange) * speed;
 
-	// 保持夜空主色调为 #0b1b3f，叠加动态亮度
-	const baseColor = { r: 11, g: 27, b: 63 };
-	appNodes.canvasContainer.style.backgroundColor = `rgb(${Math.min(255, baseColor.r + (currentSkyColor.r | 0))}, ${Math.min(255, baseColor.g + (currentSkyColor.g | 0))}, ${Math.min(255, baseColor.b + (currentSkyColor.b | 0))})`;
+	appNodes.canvasContainer.style.backgroundColor = `rgb(${currentSkyColor.r | 0}, ${currentSkyColor.g | 0}, ${currentSkyColor.b | 0})`;
 }
 
 mainStage.addEventListener("ticker", update);
@@ -1735,13 +1769,18 @@ function createParticleArc(start, arcLength, count, randomness, particleFactory)
 //获取字体点阵信息
 function getWordDots(word) {
 	if (!word) return null;
-	// 直接从预生成的wordDotsMap中获取
-	var res = wordDotsMap[word];
-	if (res) {
-		return res;
-	}
-	// 如果不存在则返回null，避免卡顿
-	return null;
+	// var res = wordDotsMap[word];
+	// if (!res) {
+	//     wordDotsMap[word] = MyMath.literalLattice(word);
+	//     res = wordDotsMap[word];
+	// }
+
+	//随机字体大小 60~130
+	var fontSize = Math.floor(Math.random() * 70 + 60);
+
+	var res = MyMath.literalLattice(word, 3, "Gabriola,华文琥珀", fontSize + "px");
+
+	return res;
 }
 
 /**
