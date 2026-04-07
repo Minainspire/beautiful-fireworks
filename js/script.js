@@ -78,20 +78,48 @@ const mainStage = new Stage("main-canvas");
 const stages = [trailsStage, mainStage];
 
 //随机文字烟花内容
-const randomWords = ["heng"];
+// 动态文字烟花内容
+const customWords = [
+	"2025.3.27 我第一次见你，你穿着蓝色条纹衬衫，干净清爽",
+	"雨后的中原镇，晚风微凉，你的胸膛给我温暖",
+	"海边的烟花下，心跳漏半拍的亲吻",
+	"你曾说喜欢聪明的女孩，我也在努力成长",
+	"系统升级补丁提示"
+];
+let wordIndex = 0;
 const wordDotsMap = {};
-randomWords.forEach((word) => {
+customWords.forEach((word) => {
 	wordDotsMap[word] = MyMath.literalLattice(word, 3, "Gabriola,华文琥珀", "90px");
 });
+
+// 控制每条文字只出现一次，依次出现
+function nextWord() {
+	if (wordIndex < customWords.length) {
+		return customWords[wordIndex++];
+	} else {
+		return null;
+	}
+}
+
+// 替换原有的 randomWord 函数
+function randomWord() {
+	// 降低频率：每隔较长时间才出现一次文字烟花
+	if (Math.random() < 0.2 && wordIndex < customWords.length) {
+		return nextWord();
+	}
+	return "";
+}
 
 // 自定义背景
 document.addEventListener("DOMContentLoaded", function () {
 	// 获取目标div元素
 	var canvasContainer = document.querySelector(".canvas-container");
-	// 设置背景图像和背景大小
-	// 在这里输入图片路径
-	canvasContainer.style.backgroundImage = "BB8201A9-155B-4F2D-8EF3-84AB5F9772B7_1_105_c.jpeg";
-	canvasContainer.style.backgroundSize = "100%";
+	// 设置背景颜色
+	canvasContainer.style.background = "#0b1b3f";
+	canvasContainer.style.backgroundImage = "url()";
+	canvasContainer.style.backgroundSize = "cover";
+	canvasContainer.style.backgroundRepeat = "no-repeat";
+	canvasContainer.style.backgroundPosition = "center";
 });
 
 //全屏帮助程序，使用Fscreen作为前缀。
@@ -288,7 +316,7 @@ function configDidUpdate() {
 	isHighQuality = quality === QUALITY_HIGH;
 
 	if (skyLightingSelector() === SKY_LIGHT_NONE) {
-		appNodes.canvasContainer.style.backgroundColor = "#000";
+		appNodes.canvasContainer.style.backgroundColor = "#0b1b3f";
 	}
 
 	Spark.drawWidth = quality === QUALITY_HIGH ? 0.75 : 1;
@@ -578,13 +606,6 @@ function randomColor(options) {
 
 	lastColor = color;
 	return color;
-}
-
-// 随机获取一段文字
-function randomWord() {
-	if (randomWords.length === 0) return "";
-	if (randomWords.length === 1) return randomWords[0];
-	return randomWords[(Math.random() * randomWords.length) | 0];
 }
 
 function whiteOrGold() {
@@ -1662,7 +1683,9 @@ function colorSky(speed) {
 	currentSkyColor.g += ((targetSkyColor.g - currentSkyColor.g) / colorChange) * speed;
 	currentSkyColor.b += ((targetSkyColor.b - currentSkyColor.b) / colorChange) * speed;
 
-	appNodes.canvasContainer.style.backgroundColor = `rgb(${currentSkyColor.r | 0}, ${currentSkyColor.g | 0}, ${currentSkyColor.b | 0})`;
+	// 保持夜空主色调为 #0b1b3f，叠加动态亮度
+	const baseColor = { r: 11, g: 27, b: 63 };
+	appNodes.canvasContainer.style.backgroundColor = `rgb(${Math.min(255, baseColor.r + (currentSkyColor.r | 0))}, ${Math.min(255, baseColor.g + (currentSkyColor.g | 0))}, ${Math.min(255, baseColor.b + (currentSkyColor.b | 0))})`;
 }
 
 mainStage.addEventListener("ticker", update);
@@ -1691,18 +1714,13 @@ function createParticleArc(start, arcLength, count, randomness, particleFactory)
 //获取字体点阵信息
 function getWordDots(word) {
 	if (!word) return null;
-	// var res = wordDotsMap[word];
-	// if (!res) {
-	//     wordDotsMap[word] = MyMath.literalLattice(word);
-	//     res = wordDotsMap[word];
-	// }
-
-	//随机字体大小 60~130
-	var fontSize = Math.floor(Math.random() * 70 + 60);
-
-	var res = MyMath.literalLattice(word, 3, "Gabriola,华文琥珀", fontSize + "px");
-
-	return res;
+	// 直接从预生成的wordDotsMap中获取
+	var res = wordDotsMap[word];
+	if (res) {
+		return res;
+	}
+	// 如果不存在则返回null，避免卡顿
+	return null;
 }
 
 /**
