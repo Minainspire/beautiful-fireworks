@@ -88,23 +88,29 @@ const customWords = [
 ];
 let wordIndex = 0;
 const wordDotsMap = {};
+let initWordIndex = 0;
 
-// 延迟初始化文字点阵，避免页面卡顿
-function initializeWordDots() {
-	customWords.forEach((word) => {
-		if (!wordDotsMap[word]) {
-			try {
-				wordDotsMap[word] = MyMath.literalLattice(word, 3, "Gabriola,华文琥珀", "90px");
-			} catch (e) {
-				console.error("Failed to generate word dots for:", word, e);
-			}
+// 逐个初始化文字点阵，避免阻塞主线程
+function initializeWordDotsProgressive() {
+	if (initWordIndex < customWords.length) {
+		const word = customWords[initWordIndex++];
+		try {
+			wordDotsMap[word] = MyMath.literalLattice(word, 3, "Gabriola,华文琥珀", "90px");
+		} catch (e) {
+			console.error("Failed to generate word dots for:", word, e);
 		}
-	});
+		// 继续初始化下一个，使用 requestIdleCallback 或 setTimeout
+		if (window.requestIdleCallback) {
+			requestIdleCallback(initializeWordDotsProgressive, { timeout: 500 });
+		} else {
+			setTimeout(initializeWordDotsProgressive, 50);
+		}
+	}
 }
 
-// 页面加载完成后初始化
+// 页面加载完成后开始初始化
 document.addEventListener("DOMContentLoaded", () => {
-	setTimeout(initializeWordDots, 500);
+	setTimeout(initializeWordDotsProgressive, 1000);
 });
 
 // 控制每条文字只出现一次，依次出现
