@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	var canvasContainer = document.querySelector(".canvas-container");
 	// 设置背景图像和背景大小
 	// 在这里输入图片路径
-	canvasContainer.style.backgroundImage = "/Users/min/Desktop/beautiful-fireworks/BB8201A9-155B-4F2D-8EF3-84AB5F9772B7_1_105_c.jpeg";
+	canvasContainer.style.backgroundImage = "BB8201A9-155B-4F2D-8EF3-84AB5F9772B7_1_105_c.jpeg";
 	canvasContainer.style.backgroundSize = "100%";
 });
 
