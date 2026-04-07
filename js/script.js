@@ -88,8 +88,23 @@ const customWords = [
 ];
 let wordIndex = 0;
 const wordDotsMap = {};
-customWords.forEach((word) => {
-	wordDotsMap[word] = MyMath.literalLattice(word, 3, "Gabriola,华文琥珀", "90px");
+
+// 延迟初始化文字点阵，避免页面卡顿
+function initializeWordDots() {
+	customWords.forEach((word) => {
+		if (!wordDotsMap[word]) {
+			try {
+				wordDotsMap[word] = MyMath.literalLattice(word, 3, "Gabriola,华文琥珀", "90px");
+			} catch (e) {
+				console.error("Failed to generate word dots for:", word, e);
+			}
+		}
+	});
+}
+
+// 页面加载完成后初始化
+document.addEventListener("DOMContentLoaded", () => {
+	setTimeout(initializeWordDots, 500);
 });
 
 // 控制每条文字只出现一次，依次出现
@@ -116,7 +131,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	var canvasContainer = document.querySelector(".canvas-container");
 	// 设置背景颜色
 	canvasContainer.style.background = "#0b1b3f";
-	canvasContainer.style.backgroundImage = "url()";
+	canvasContainer.style.backgroundImage = "none";
 	canvasContainer.style.backgroundSize = "cover";
 	canvasContainer.style.backgroundRepeat = "no-repeat";
 	canvasContainer.style.backgroundPosition = "center";
